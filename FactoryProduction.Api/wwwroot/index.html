@@ -1,0 +1,514 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NorthBridge Garments - Production Dashboard</title>
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --card: #fff;
+            --ink: #1c2430;
+            --muted: #6b7686;
+            --line: #e2e6ec;
+            --brand: #1f5fbf;
+            --ok: #1e8a4c;
+            --warn: #b7791f;
+            --bad: #c0392b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font: 15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        header {
+            background: var(--brand);
+            color: #fff;
+            padding: 14px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            align-items: center;
+        }
+
+            header h1 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 600;
+                flex: 1 1 260px;
+            }
+
+            header small {
+                opacity: .85;
+                display: block;
+                font-weight: 400;
+                font-size: 12px;
+            }
+
+        .bar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        main {
+            max-width: 1150px;
+            margin: 0 auto;
+            padding: 16px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+
+            .card h2 {
+                margin: 0 0 10px;
+                font-size: 15px;
+            }
+
+        .kpis {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit,minmax(150px,1fr));
+        }
+
+        .kpi {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+            .kpi .v {
+                font-size: 28px;
+                font-weight: 700;
+            }
+
+            .kpi .l {
+                color: var(--muted);
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+            }
+
+            .kpi.warn .v {
+                color: var(--warn);
+            }
+
+            .kpi.bad .v {
+                color: var(--bad);
+            }
+
+        textarea {
+            width: 100%;
+            min-height: 130px;
+            font: 13px/1.4 ui-monospace,Menlo,Consolas,monospace;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            resize: vertical;
+        }
+
+        input[type=text] {
+            padding: 7px 9px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            font: inherit;
+            min-width: 0;
+        }
+
+        button {
+            background: var(--brand);
+            color: #fff;
+            border: 0;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font: inherit;
+            cursor: pointer;
+        }
+
+            button.secondary {
+                background: #e9eef6;
+                color: var(--brand);
+            }
+
+            button:disabled {
+                opacity: .5;
+                cursor: not-allowed;
+            }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .tab {
+            background: #e9eef6;
+            color: var(--brand);
+        }
+
+            .tab.active {
+                background: var(--brand);
+                color: #fff;
+            }
+
+        .scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 7px 8px;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+
+            td.wrap {
+                white-space: normal;
+                min-width: 220px;
+            }
+
+        th {
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: #e9eef6;
+        }
+
+        .ACCEPTED, .ACKED, .COMPLETED, .ONLINE {
+            background: #dcf3e6;
+            color: var(--ok);
+        }
+
+        .DUPLICATE, .PENDING_REFERENCE, .ALREADY_ACKED, .UNRESOLVED_REFERENCE {
+            background: #fdf0d5;
+            color: var(--warn);
+        }
+
+        .REJECTED, .CONFLICT, .FAILED, .NOT_READY, .NOT_FOUND, .REJECTED_VOID, .REJECTED_SUBMISSION, .OFFLINE {
+            background: #fbe0dc;
+            color: var(--bad);
+        }
+
+        .msg {
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+            .msg.err {
+                background: #fbe0dc;
+                color: var(--bad);
+            }
+
+            .msg.ok {
+                background: #dcf3e6;
+                color: var(--ok);
+            }
+
+            .msg.info {
+                background: #e9eef6;
+                color: var(--brand);
+            }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .mqtt {
+            display: grid;
+            gap: 8px 18px;
+            grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+            font-size: 13px;
+        }
+
+            .mqtt b {
+                display: block;
+                color: var(--muted);
+                font-size: 11px;
+                text-transform: uppercase;
+                font-weight: 600;
+            }
+
+        ul.results {
+            margin: 8px 0 0;
+            padding-left: 18px;
+            font-size: 13px;
+        }
+
+        @media (max-width:600px) {
+            main {
+                padding: 10px;
+            }
+
+            .kpi .v {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>
+            NorthBridge Garments - Production Dashboard
+            <small>Supervisor: review totals, inspect exceptions, acknowledge events &middot; Operator: submit counts / corrections</small>
+        </h1>
+        <div class="bar">
+            <label for="source">Line</label>
+            <input type="text" id="source" placeholder="all lines (e.g. LINE-01)" size="18">
+            <button class="secondary" id="refresh">Refresh</button>
+        </div>
+    </header>
+
+    <main>
+        <section>
+            <div class="kpis" id="kpis"></div>
+            <div id="kpiMsg"></div>
+        </section>
+
+        <section class="card">
+            <h2>Submit event(s) <span class="muted">(one JSON object or an array - COUNT or VOID)</span></h2>
+            <textarea id="payload" spellcheck="false"></textarea>
+            <div class="row">
+                <button id="send">Send</button>
+                <button class="secondary" id="sampleCount">Sample COUNT +5</button>
+                <button class="secondary" id="sampleVoid">Sample VOID (target not here yet)</button>
+                <button class="secondary" id="sampleTarget">Sample target COUNT</button>
+                <button class="secondary" id="sampleBad">Sample invalid item</button>
+            </div>
+            <div id="sendMsg"></div>
+            <ul class="results" id="results"></ul>
+        </section>
+
+        <section class="card">
+            <div class="tabs">
+                <button class="tab active" id="tabPending">Pending review</button>
+                <button class="tab" id="tabExceptions">Exceptions</button>
+            </div>
+            <div class="row" id="ackBar" style="margin:0 0 8px">
+                <button id="ack" disabled>Acknowledge selected</button>
+                <span class="muted" id="selCount">0 selected</span>
+            </div>
+            <div id="tableMsg"></div>
+            <div class="scroll"><table id="table"></table></div>
+        </section>
+
+        <section class="card">
+            <h2>MQTT device connection</h2>
+            <div id="mqttMsg"></div>
+            <div class="mqtt" id="mqtt"></div>
+        </section>
+    </main>
+
+    <script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt = (v) => v ? new Date(v).toLocaleString() : '-';
+  const pill = (s) => `<span class="pill ${esc(s)}">${esc(s)}</span>`;
+  const say = (el, text, kind) => { el.innerHTML = text ? `<div class="msg ${kind}">${esc(text)}</div>` : ''; };
+
+  let view = 'pending';
+  let lastTarget = null;
+  const selected = new Set();
+
+  async function api(path, options) {
+    let res;
+    try { res = await fetch(path, options); }
+    catch (e) { throw new Error('Cannot reach the server. Is the API running?'); }
+    let body = null;
+    try { body = await res.json(); } catch (e) { /* non-JSON body */ }
+    if (!res.ok) throw new Error((body && body.message) || `Request failed (HTTP ${res.status})`);
+    return body;
+  }
+  const sourceQuery = () => { const s = $('source').value.trim(); return s ? `&source_id=${encodeURIComponent(s)}` : ''; };
+
+  // ---- KPIs ----
+  const KPIS = [
+    ['net_total', 'Net total', ''], ['processed_events', 'Processed events', ''], ['pending_ack', 'Pending acknowledgement', 'warn'],
+    ['unresolved', 'Unresolved references', 'bad'], ['duplicates', 'Duplicates', 'warn'], ['conflicts', 'Conflicts', 'bad']
+  ];
+  async function loadKpis() {
+    $('kpis').innerHTML = KPIS.map(([k, l]) => `<div class="kpi"><div class="v">...</div><div class="l">${l}</div></div>`).join('');
+    try {
+      const s = await api('/api/state?view=summary' + sourceQuery());
+      $('kpis').innerHTML = KPIS.map(([k, l, c]) =>
+        `<div class="kpi ${s[k] > 0 ? c : ''}"><div class="v">${esc(s[k])}</div><div class="l">${l}</div></div>`).join('');
+      say($('kpiMsg'), '', '');
+    } catch (e) {
+      $('kpis').innerHTML = '';
+      say($('kpiMsg'), 'Could not load totals: ' + e.message, 'err');
+    }
+  }
+
+  // ---- tables ----
+  async function loadTable() {
+    const table = $('table');
+    say($('tableMsg'), 'Loading...', 'info');
+    try {
+      const data = await api(`/api/state?view=${view}` + sourceQuery());
+      say($('tableMsg'), '', '');
+      if (!data.items.length) {
+        table.innerHTML = '';
+        say($('tableMsg'), view === 'pending' ? 'Nothing waiting for review.' : 'No exceptions - everything is clean.', 'info');
+        selected.clear(); updateSelection(); return;
+      }
+      if (view === 'pending') {
+        const ids = new Set(data.items.map((i) => i.event_id));
+        [...selected].forEach((id) => { if (!ids.has(id)) selected.delete(id); });
+        table.innerHTML = '<tr><th><input type="checkbox" id="all"></th><th>Event</th><th>Line</th><th>Type</th><th>Qty</th><th>Event time</th><th>Received</th><th>Status</th></tr>' +
+          data.items.map((i) => `<tr><td><input type="checkbox" class="pick" data-id="${esc(i.event_id)}" ${selected.has(i.event_id) ? 'checked' : ''}></td>
+            <td>${esc(i.event_id)}</td><td>${esc(i.source_id)}</td><td>${esc(i.type)}</td><td>${esc(i.quantity)}</td>
+            <td>${fmt(i.event_time)}</td><td>${fmt(i.received_at)}</td><td>${pill(i.status)}${i.voided ? ' <span class="pill REJECTED">voided</span>' : ''}</td></tr>`).join('');
+        $('all').onchange = (ev) => { document.querySelectorAll('.pick').forEach((c) => { c.checked = ev.target.checked; toggle(c); }); };
+        document.querySelectorAll('.pick').forEach((c) => { c.onchange = () => toggle(c); });
+      } else {
+        table.innerHTML = '<tr><th>Kind</th><th>Event</th><th>Line</th><th>Status</th><th>Reason</th><th>When</th></tr>' +
+          data.items.map((i) => `<tr><td>${pill(i.kind)}</td><td>${esc(i.event_id || '-')}</td><td>${esc(i.source_id || '-')}</td>
+            <td>${pill(i.status)}</td><td class="wrap">${esc(i.reason)}</td><td>${fmt(i.occurred_at)}</td></tr>`).join('');
+      }
+      updateSelection();
+    } catch (e) {
+      table.innerHTML = '';
+      say($('tableMsg'), 'Could not load the list: ' + e.message, 'err');
+    }
+  }
+  function toggle(c) { c.checked ? selected.add(c.dataset.id) : selected.delete(c.dataset.id); updateSelection(); }
+  function updateSelection() {
+    $('selCount').textContent = `${selected.size} selected`;
+    $('ack').disabled = selected.size === 0 || view !== 'pending';
+    $('ackBar').style.display = view === 'pending' ? 'flex' : 'none';
+  }
+  function setView(v) {
+    view = v;
+    $('tabPending').classList.toggle('active', v === 'pending');
+    $('tabExceptions').classList.toggle('active', v === 'exceptions');
+    loadTable();
+  }
+
+  // ---- acknowledge ----
+  async function acknowledge() {
+    const ids = [...selected];
+    $('ack').disabled = true;
+    try {
+      const res = await api('/api/ack', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event_ids: ids }) });
+      const summary = res.results.map((r) => `${r.event_id}: ${r.status}`).join(', ');
+      say($('tableMsg'), 'Acknowledgement result - ' + summary, res.results.every((r) => r.status === 'ACKED') ? 'ok' : 'info');
+      selected.clear();
+      await Promise.all([loadKpis(), loadPendingKeepMsg()]);
+    } catch (e) { say($('tableMsg'), 'Acknowledge failed: ' + e.message, 'err'); updateSelection(); }
+  }
+  async function loadPendingKeepMsg() {
+    const keep = $('tableMsg').innerHTML;
+    await loadTable();
+    if (keep.includes('Acknowledgement result')) $('tableMsg').innerHTML = keep;
+  }
+
+  // ---- submit ----
+  const newId = () => 'EV-' + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 90 + 10);
+  const now = () => new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+  const src = () => $('source').value.trim() || 'LINE-01';
+  function sample(obj) { $('payload').value = JSON.stringify(obj, null, 2); }
+
+  async function send() {
+    const box = $('sendMsg'), list = $('results');
+    list.innerHTML = '';
+    let parsed;
+    try { parsed = JSON.parse($('payload').value); }
+    catch (e) { say(box, 'Invalid JSON: ' + e.message, 'err'); return; }
+    $('send').disabled = true;
+    say(box, 'Sending...', 'info');
+    try {
+      const res = await api('/api/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(parsed) });
+      say(box, `Server answered with ${res.results.length} result(s).`, 'ok');
+      list.innerHTML = res.results.map((r) => `<li>${esc(r.event_id ?? '(no event_id)')} ${pill(r.status)} <span class="muted">${esc(r.message)}</span></li>`).join('');
+      await Promise.all([loadKpis(), loadTable()]);
+    } catch (e) { say(box, e.message, 'err'); }
+    finally { $('send').disabled = false; }
+  }
+
+  // ---- MQTT ----
+  async function loadMqtt() {
+    try {
+      const m = await api('/api/mqtt/status');
+      say($('mqttMsg'), m.enabled ? '' : 'MQTT worker is disabled in configuration.', 'info');
+      const cell = (l, v) => `<div><b>${l}</b>${v}</div>`;
+      $('mqtt').innerHTML =
+        cell('Connection', m.connected ? pill('ONLINE') : pill('OFFLINE')) +
+        cell('Candidate ID', esc(m.candidate_id || '(not set)')) +
+        cell('Broker', esc(m.broker)) +
+        cell('Last challenge ID', esc(m.last_challenge_id || '-')) +
+        cell('Last challenge time', fmt(m.last_challenge_at)) +
+        cell('Last response status', m.last_response_status ? pill(m.last_response_status) : '-') +
+        cell('Challenges (total / completed / failed)', `${m.challenges_total} / ${m.challenges_completed} / ${m.challenges_failed}`) +
+        cell('Last heartbeat', fmt(m.last_heartbeat_at)) +
+        cell('Last error', esc(m.last_error || '-'));
+    } catch (e) {
+      $('mqtt').innerHTML = '';
+      say($('mqttMsg'), 'Could not load MQTT status: ' + e.message, 'err');
+    }
+  }
+
+  // ---- wiring ----
+  const refreshAll = () => Promise.all([loadKpis(), loadTable(), loadMqtt()]);
+  $('refresh').onclick = refreshAll;
+  $('source').addEventListener('change', refreshAll);
+  $('send').onclick = send;
+  $('ack').onclick = acknowledge;
+  $('tabPending').onclick = () => setView('pending');
+  $('tabExceptions').onclick = () => setView('exceptions');
+  $('sampleCount').onclick = () => sample({ source_id: src(), event_id: newId(), type: 'COUNT', quantity: 5, target_event_id: null, event_time: now() });
+  $('sampleTarget').onclick = () => {
+    if (!lastTarget) { say($('sendMsg'), 'Click "Sample VOID" first - it creates the COUNT this button then sends.', 'info'); return; }
+    sample({ source_id: lastTarget.source, event_id: lastTarget.id, type: 'COUNT', quantity: 5, target_event_id: null, event_time: now() });
+  };
+  $('sampleVoid').onclick = () => {
+    lastTarget = { id: newId(), source: src() };
+    sample({ source_id: lastTarget.source, event_id: newId(), type: 'VOID', quantity: null, target_event_id: lastTarget.id, event_time: now() });
+  };
+  $('sampleBad').onclick = () => sample([{ source_id: src(), event_id: newId(), type: 'COUNT', quantity: 5, target_event_id: null, event_time: now() },
+                                         { source_id: src(), event_id: newId(), type: 'COUNT', quantity: -3, target_event_id: null, event_time: 'yesterday' }]);
+
+  $('sampleCount').click();
+  refreshAll();
+  setInterval(() => { loadKpis(); loadMqtt(); if (!selected.size) loadTable(); }, 5000);
+})();
+    </script>
+</body>
+</html>
